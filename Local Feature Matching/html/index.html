@@ -1,0 +1,361 @@
+<html>
+<head>
+<title>Computer Vision Project</title>
+<link href='http://fonts.googleapis.com/css?family=Nunito:300|Crimson+Text|Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" title="Default" href="styles/github.css">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>  
+
+<link rel="stylesheet" href="highlighting/styles/default.css">
+<script src="highlighting/highlight.pack.js"></script>
+
+<style type="text/css">
+body {
+	margin: 0px;
+	width: 100%;
+	font-family: 'Crimson Text', serif;
+	font-size: 20px;
+	background: #fcfcfc;
+}
+h1 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 28px;
+	margin: 25px 0px 0px 0px;
+	text-transform: lowercase;
+
+}
+
+h2 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 32px;
+	margin: 15px 0px 35px 0px;
+	color: #333;	
+	word-spacing: 3px;
+}
+
+h3 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 26px;
+	margin: 10px 0px 10px 0px;
+	color: #333;
+	word-spacing: 2px;
+}
+h4 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 22px;
+	margin: 10px 0px 10px 0px;
+	color: #333;
+	word-spacing: 2px;
+}
+
+h5 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 18px;
+	margin: 10px 0px 10px 0px;
+	color: #111;
+	word-spacing: 2px;
+}
+
+p, li {
+	color: #444;
+}
+
+a {
+	color: #DE3737;
+}
+
+.container {
+	margin: 0px auto 0px auto;
+	width: 960px;
+}
+
+#header {
+	background: #333;
+	width: 100%;
+}
+
+#headersub {
+	color: #ccc;
+	width: 960px;
+	margin: 0px auto 0px auto;
+	padding: 20px 0px 20px 0px;
+}
+
+.chart {
+	width: 480px;
+}
+.lol {
+	font-size: 16px;
+	color: #888;
+	font-style: italic;
+}
+.sep {
+	height: 1px;
+	width: 100%;
+	background: #999;
+	margin: 20px 0px 20px 0px;
+}
+.footer{
+	font-size: 16px;
+}
+.latex {
+	width: 100%;
+}
+
+.latex img {
+	display: block;
+	margin: 0px auto 0px auto;
+}
+
+pre {
+	font-family: 'Droid Sans Mono';
+	font-size: 14px;
+}
+
+td img {
+  vertical-align: middle;
+}
+
+#contents a {
+}
+</style>
+<script type="text/javascript">
+    hljs.initHighlightingOnLoad();
+</script>
+</head>
+<body>
+<div id="header" >
+<div id="headersub">
+<h1><span style="color: #DE3737">JIN LIN</span></h1>
+</div>
+</div>
+<div class="container">
+
+<h2>Project 2: Local Feature Matching</h2>
+
+<h2>Goal</h2>
+<p> 	Create a local feature matching algorithm. There are three major steps:</p>
+<ol>
+
+<li>Interest point detection</li>
+<li>Local feature description</li>
+<li>Feature matching</li>
+</ol>
+
+<h2>Algorithm</h2>
+
+<h3>Interest Point Detection</h3>
+<ol>
+
+<li>Harris corner detector</li>
+<p> 	At the beginning, I implemented the Harris corner detector using the first 4 steps of algorithm described in Szeliski 4.1.1:
+</br>
+1) Compute the horizontal and vertical derivatives of the image Ix and Iy.
+</br>
+2) Compute the three images corresponding to the outer products of these gradients.
+</br>
+3) Convolve each of these images with a larger Gaussian.
+</br>
+4) Compute the cornerness function.
+</br>
+</p>
+<pre><code>
+R = zeros(height, width);
+a = 0.04;
+for i = 1 : height
+    for j = 1 : width
+        M = [Ix2(i, j), Ixy(i, j); Ixy(i, j), Iy2(i, j)];
+        R(i, j) = det(M) - a * (trace(M))^2;
+    end
+end
+
+</code></pre>
+
+<li>Non-maxima suppression</li>
+<p> 	Implementing the 4 steps above will generate lots of interest points, and also, points will be denser in regions of higher contrast. I used non-maxima suppression to mitigate this problem by setting a threshold and using function colfilt() to pick up the local maxima points.</p>
+</ol>
+
+<h3>Local Feature Description</h3>
+I used SIFT descriptor to get features. There are 5 main steps:
+<ol>
+<li>Take a feature_width*feature_width region around each interest point.</li>
+<li>Divide each region into 16 cells, every cell's size is 4*4.</li>
+<li>Compute gradient for each point of a cell and allocate them into 8 bins.</li>
+<li>Repeat step 3 for every cell and form a 8*16=128 dimensions vector.</li>
+<li>Normalize the vector and get this interest point's feature.</li>
+
+</ol>
+
+<h3>Feature Matching</h3>
+<ol>
+<li>Ratio test</li>
+<p> 1)Compute the distances between each pair of features and then normalized them.
+</br>
+2)Sort the distances to find the two nearest neighbours for each feature of image1. 
+</br>
+3)Count the ratio and get the confidences.
+</br>
+4)Sort the confidences and pick up 100 top similar matches.</p>
+<li>Kd-tree</li>
+<p> 	At the beginning, I computed the distances between all pairs of features simply using 2 nested loops. The computational expense of that is very high. So I used a space partitioning data structure: Kd-tree to accelerate matching.</p>
+<li>PCA</li>
+<p> 	Besides, I also implemented PCA to accelerate matching. I trained all 90 provided images and gained the PCA basis. Then I applied the basis on all features to reduce their dimensions from 128 to 64 or 32.</p>
+<pre><code>
+[coeff, ~, ~, ~, ~, mu] = pca(feature_matrix, 'Centered', true, 'NumComponents', dim); 
+% save pca_32 coeff mu
+save pca_64 coeff mu
+
+</code></pre>
+<pre><code>
+% use pca to create a low dimensional descriptor
+% load pca_32.mat coeff mu
+load pca_64.mat coeff mu
+features1 = (features1 - mu) * coeff;
+features2 = (features2 - mu) * coeff;
+
+</code></pre>
+
+</ol>
+
+
+
+<h2>Results and Analysis</h2>
+
+<h3>Interest Point Detection</h3>
+<ol>
+
+<li>Non-maxima suppression</li>
+<p> 	After implementing non-maxima suppression, the amount of interest points decreases significantly, as well as resulting in a more even distribution of interest points across the image. We can see the table below that the left side images' "Num of Interest Points"(before non-maxima suppression) are far more than that of the right side(after non-maxima suppression). And the top 100 interest points(features) distribute more evenly after doing non-maxima suppression.</p>
+<table border=1>
+<tr> <th></th>  <th>No suppression</th>  <th>Non-maxima suppression</th> </tr>
+<tr>
+<th>Notre Dame(Top 100 features)</th>
+<td> <img src="data/Notre Dame/1/before.jpg" width="100%"/> </td>
+<td> <img src="data/Notre Dame/1/after.jpg" width="100%"/> </td>
+</tr>
+<tr> <th>Num of Interest Points(image1+image2)</th>  <th>13897 + 15036</th>  <th>1390 + 1417</th> </tr>
+<tr> <th>Accuracy(Top 100)</th>  <th>61%</th>  <th>92%</th> </tr>
+<tr> <th>Time for get_features()(Sec)</th>  <th>4.24</th>  <th>0.46</th> </tr>
+</table>
+
+<p>And we can also notice that less interest points would not cause low matching accuracy, since a more even distribution can work better when matching two images with some transformations between them.
+</br>
+	What's more, it is obviously that less interest points can also accelerate the whole running speed, because the function get_features() can run faster with lower number of points.</p>
+</ol>
+
+
+
+<h3>Local Feature Description</h3>
+<ol>
+<li>Feature width</li>
+<p> 	Different feature_width will lead to different features, and then result in different matching accuracy. We can see the tables below that while tuning feature_width from 16 to 32, the matching accuracy of Notre Dame drops 2%, but that of Mount Rushmore increases from 83% to 98%, and Episcopal Gaudi's increases from 10% to 21%. And more for Episcopal Gaudi, when feature_width is 64, the matching accuracy is 31%, but when feature_width becomes higher than that, the accuracy would drop.</p>
+<p> 	The running time of function get_features() is easier to analyze. Since feature_width defines cell size, the relationship between running time of get_features() and feature_width is almost linear. That can also be seen from the tables below.</p>
+<table border=1>
+<tr> <th></th>  <th>feature_width = 16</th>  <th>feature_width = 32</th> </tr>
+<tr>
+<th>Notre Dame(Top 100 features)</th>
+<td> <img src="data/Notre Dame/2/16.jpg" width="100%"/> </td>
+<td> <img src="data/Notre Dame/2/32.jpg" width="100%"/> </td>
+</tr>
+<tr> <th>Accuracy(Top 100)</th>  <th>92%</th>  <th>90%</th> </tr>
+<tr> <th>Time for get_features()(Sec)</th>  <th>0.46</th>  <th>0.77</th> </tr>
+</table>
+
+</br>
+
+<table border=1>
+<tr> <th></th>  <th>feature_width = 16</th>  <th>feature_width = 32</th> </tr>
+<tr>
+<th>Mount Rushmore(Top 100 features)</th>
+<td> <img src="data/Mount Rushmore/2/16.jpg" width="100%"/> </td>
+<td> <img src="data/Mount Rushmore/2/32.jpg" width="100%"/> </td>
+</tr>
+<tr> <th>Accuracy(Top 100)</th>  <th>83%</th>  <th>98%</th> </tr>
+<tr> <th>Time for get_features()(Sec)</th>  <th>0.66</th>  <th>1.28</th> </tr>
+</table>
+
+</br>
+
+<table border=1>
+<tr> <th></th>  <th>feature_width = 16</th>  <th>feature_width = 32</th> <th>feature_width = 64</th> <th>feature_width = 128</th> </tr>
+<tr>
+<th>Episcopal Gaudi(Top 100 features)</th>
+<td> <img src="data/Episcopal Gaudi/2/16.jpg" width="100%"/> </td>
+<td> <img src="data/Episcopal Gaudi/2/32.jpg" width="100%"/> </td>
+<td> <img src="data/Episcopal Gaudi/2/64.jpg" width="100%"/> </td>
+<td> <img src="data/Episcopal Gaudi/2/128.jpg" width="100%"/> </td>
+</tr>
+<tr> <th>Accuracy(Top 100)</th>  <th>10%</th>  <th>21%</th> <th>31%</th> <th>18%</th> </tr>
+<tr> <th>Time for get_features()(Sec)</th>  <th>1.18</th>  <th>2.35</th> <th>6.38</th> <th>12.78</th> </tr>
+</table>
+
+
+</ol>
+
+
+
+
+<h3>Feature Matching</h3>
+<ol>
+<p> 	For acceleration, I applied Kd-tree and PCA for feature matching. We can see from the tables below that after applying Kd-tree, for each pair of images, the running time for matching decreases dramatically, and no influences for matching accuracy. Because Kd-tree is a space partitioning data structure, it only accelerate the step of distances counting between features.
+But we can see that, after applying PCA, not only the running time drops, but also the accuracy changed. Different PCA dimensions lead to different matching accuracy, and that is subtle.
+</br>(for all images, feature_width = 32)</p>
+ <p> For Notre Dame, when feature dimension decreases from 128 to 64, and then to 32, that does not damage the matching accuracy, instead, that becomes higher.</p>
+<table border=1>
+<tr> <th></th>  <th>Simple Match</th>  <th>Kd-tree</th>  <th>PCA_64dim & Simple Match</th>  <th>PCA_64dim & Kd-tree</th>  <th>PCA_32dim & Simple Match</th>  <th>PCA_32dim & Kd-tree</th> </tr>
+<tr>
+<th>Notre Dame</th>
+<td> <img src="data/Notre Dame/3/s.jpg" width="100%"/> </td>
+<td> <img src="data/Notre Dame/3/k.jpg" width="100%"/> </td>
+<td> <img src="data/Notre Dame/3/p64_s.jpg" width="100%"/> </td>
+<td> <img src="data/Notre Dame/3/p64_k.jpg" width="100%"/> </td>
+<td> <img src="data/Notre Dame/3/p32_s.jpg" width="100%"/> </td>
+<td> <img src="data/Notre Dame/3/p32_k.jpg" width="100%"/> </td>
+</tr>
+<tr> <th>Accuracy(Top 100)</th>  <th>90%</th>  <th>90%</th> <th>92%</th>  <th>92%</th> <th>94%</th>  <th>94%</th> </tr>
+<tr> <th>Time for matching (Sec)</th>  <th>3.00</th>  <th>0.12</th> <th>2.89</th>  <th>0.09</th> <th>2.73</th>  <th>0.07</th> </tr>
+</table>
+
+</br>
+ <p> For Mount Rushmore, the lower feature dimension, the lower matching accuracy.</p>
+<table border=1>
+<tr> <th></th>  <th>Simple Match</th>  <th>Kd-tree</th>  <th>PCA_64dim & Simple Match</th>  <th>PCA_64dim & Kd-tree</th>  <th>PCA_32dim & Simple Match</th>  <th>PCA_32dim & Kd-tree</th> </tr>
+<tr>
+<th>Mount Rushmore</th>
+<td> <img src="data/Mount Rushmore/3/s.jpg" width="100%"/> </td>
+<td> <img src="data/Mount Rushmore/3/k.jpg" width="100%"/> </td>
+<td> <img src="data/Mount Rushmore/3/p64_s.jpg" width="100%"/> </td>
+<td> <img src="data/Mount Rushmore/3/p64_k.jpg" width="100%"/> </td>
+<td> <img src="data/Mount Rushmore/3/p32_s.jpg" width="100%"/> </td>
+<td> <img src="data/Mount Rushmore/3/p32_k.jpg" width="100%"/> </td>
+</tr>
+<tr> <th>Accuracy(Top 100)</th>  <th>98%</th>  <th>98%</th> <th>96%</th>  <th>96%</th> <th>91%</th>  <th>91%</th> </tr>
+<tr> <th>Time for matching (Sec)</th>  <th>5.80</th>  <th>0.20</th> <th>5.31</th>  <th>0.13</th> <th>5.04</th>  <th>0.09</th> </tr>
+</table>
+
+</br>
+ <p> For Episcopal Gaudi, things become more complicate. Matching accuracy fluctuating while changing the feature dimension.</p>
+<table border=1>
+<tr> <th></th>  <th>Simple Match</th>  <th>Kd-tree</th>  <th>PCA_64dim & Simple Match</th>  <th>PCA_64dim & Kd-tree</th>  <th>PCA_32dim & Simple Match</th>  <th>PCA_32dim & Kd-tree</th> </tr>
+<tr>
+<th>Episcopal Gaudi</th>
+<td> <img src="data/Episcopal Gaudi/3/s.jpg" width="100%"/> </td>
+<td> <img src="data/Episcopal Gaudi/3/k.jpg" width="100%"/> </td>
+<td> <img src="data/Episcopal Gaudi/3/p64_s.jpg" width="100%"/> </td>
+<td> <img src="data/Episcopal Gaudi/3/p64_k.jpg" width="100%"/> </td>
+<td> <img src="data/Episcopal Gaudi/3/p32_s.jpg" width="100%"/> </td>
+<td> <img src="data/Episcopal Gaudi/3/p32_k.jpg" width="100%"/> </td>
+</tr>
+<tr> <th>Accuracy(Top 100)</th>  <th>21%</th>  <th>21%</th> <th>22%</th>  <th>22%</th> <th>16%</th>  <th>16%</th> </tr>
+<tr> <th>Time for matching (Sec)</th>  <th>11.81</th>  <th>0.39</th> <th>8.02</th>  <th>0.22</th> <th>7.27</th>  <th>0.13</th> </tr>
+</table>
+ <p> And compared to Kd-tree, PCA does not reduce the running time significantly. Since PCA only affects some steps which can be run rather fast using matlab functions. But it does, more or less, affect the matching accuracy.</p>
+
+</ol>
+
+</body>
+</html>

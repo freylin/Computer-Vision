@@ -1,0 +1,411 @@
+<html>
+<head>
+<title>Computer Vision Project</title>
+<link href='http://fonts.googleapis.com/css?family=Nunito:300|Crimson+Text|Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" title="Default" href="styles/github.css">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>  
+
+<link rel="stylesheet" href="highlighting/styles/default.css">
+<script src="highlighting/highlight.pack.js"></script>
+
+<style type="text/css">
+body {
+	margin: 0px;
+	width: 100%;
+	font-family: 'Crimson Text', serif;
+	font-size: 20px;
+	background: #fcfcfc;
+}
+h1 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 28px;
+	margin: 25px 0px 0px 0px;
+	text-transform: lowercase;
+
+}
+
+h2 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 32px;
+	margin: 15px 0px 35px 0px;
+	color: #333;	
+	word-spacing: 3px;
+}
+
+h3 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 26px;
+	margin: 10px 0px 10px 0px;
+	color: #333;
+	word-spacing: 2px;
+}
+h4 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 22px;
+	margin: 10px 0px 10px 0px;
+	color: #333;
+	word-spacing: 2px;
+}
+
+h5 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 18px;
+	margin: 10px 0px 10px 0px;
+	color: #111;
+	word-spacing: 2px;
+}
+
+p, li {
+	color: #444;
+}
+
+a {
+	color: #DE3737;
+}
+
+.container {
+	margin: 0px auto 0px auto;
+	width: 960px;
+}
+
+#header {
+	background: #333;
+	width: 100%;
+}
+
+#headersub {
+	color: #ccc;
+	width: 960px;
+	margin: 0px auto 0px auto;
+	padding: 20px 0px 20px 0px;
+}
+
+.chart {
+	width: 480px;
+}
+.lol {
+	font-size: 16px;
+	color: #888;
+	font-style: italic;
+}
+.sep {
+	height: 1px;
+	width: 100%;
+	background: #999;
+	margin: 20px 0px 20px 0px;
+}
+.footer{
+	font-size: 16px;
+}
+.latex {
+	width: 100%;
+}
+
+.latex img {
+	display: block;
+	margin: 0px auto 0px auto;
+}
+
+pre {
+	font-family: 'Droid Sans Mono';
+	font-size: 14px;
+}
+
+td img {
+  vertical-align: middle;
+}
+
+#contents a {
+}
+</style>
+<script type="text/javascript">
+    hljs.initHighlightingOnLoad();
+</script>
+</head>
+<body>
+<div id="header" >
+<div id="headersub">
+<h1><span style="color: #DE3737">JIN LIN</span></h1>
+</div>
+</div>
+<div class="container">
+
+<h2>Project 1: Image Filtering and Hybrid Images</h2>
+
+<h2>Goal</h2>
+<p> 	Write an image filtering function and use it to create hybrid images.</p>
+
+<h2>Algorithm</h2>
+
+<h3>Image Filtering</h3>
+<ol>
+
+<li>Judge the filter's parity</li>
+<p> 	Both dimensions of the filter should be odd, so my_imfilter() will judge the input filter firstly, if one of its dimension is even, the function would return an error message.</p>
+
+<li>Pad the input image</li>
+<p> 	At the beginning, I padded the input image without using padarray() function, just simply created 4 zero_matrices and used cat() function to merge them with the input image (VERSION 1). Compared to padarray() function (VERSION 2), this function can run as fast as it (no matter how big the filter is), but more code amount, so I chose to use padarray() function.</p>
+<pre><code>
+% VERSION 1: pad the input image with zeros
+pad_rows = (filter_height - 1) / 2;
+pad_cols = (filter_width - 1) / 2;
+zero_rows = zeros(pad_rows, image_width, num_colors);
+zero_cols = zeros(filter_height - 1 + image_height, pad_cols, num_colors);
+padded_image = cat(1, zero_rows, image, zero_rows);
+padded_image = cat(2, zero_cols, padded_image, zero_cols);
+
+</code></pre>
+
+<pre><code>
+% VERSION 2: pad the input image with zeros
+pad_rows = (filter_height - 1) / 2;
+pad_cols = (filter_width - 1) / 2;
+padded_image = padarray(image, [pad_rows, pad_cols]);
+
+</code></pre>
+
+<li>Filter each color channel</li>
+<p> 	Since we do not know how many color channels the input image has, we count it firstly and then filter each color channel separately, and merge them in the end. To speed up this function, I use 3 nested loops: the first loop iterates through all the color channels, and the second and third loops iterate through all the image pixels, and then do the dot product to the filter.</p>
+</ol>
+
+<h3>Hybrid Images</h3>
+<ol>
+<li>Use two cutoff frequencies</li>
+<p> 	When using the same cutoff frequency to deal with the cat and dog images, I can get a fine result, but when dealing with Marilyn and Einstein images, same cutoff frequency does not work well. So I decided to use two cutoff frequencies, that can help me to control how much high frequency to remove from the first image and how much low frequency to leave in the second image seperately, and then gain a better result of hybrid image.</p>
+
+<li>Hybrid image construction</li>
+<p> 	Blurring image1 to get low frequencies, and remove the low frequencies from image2 by subtracting a blurred version of it from the original version to get its high frequencies. And finally add the low frequencies of image1 and high frequencies of image2 together to construct the hybrid image.</p>
+</ol>
+
+
+
+<h2>Results and Analysis</h2>
+
+<h3>Image Filtering</h3>
+<ol>
+<li>Input image</li>
+<p> 	Figure 1 is the resized input image.</p>
+<li>Identity image</li>
+<p> 	The test script uses identity filter to filter the input image, that does not change anything (see figure 2) but to test if the padding method used in my_imfilter() function would affect the output image or not. And from figure 1, we can see that it is the same as the input image.</p>
+
+<li>Blur image</li>
+<p> 	Here a small box filter is used to remove some high frequencies from the input image. And from figure 3, the cat image is blurred slightly and lose some details, we can see that its hair is not as sharp as figure 1 shows, and its eyes are also a little blurry. What's more, in every boundary there is a black line appears, that is caused by padding the input image with zeros.</p>
+
+<li>Large blur image</li>
+<p> 	Here the test script uses a large gaussian filter to blur the input image, and we can see from figure 4 that the cat image loses a lot of high frequencies. And also, its boundaries are filled with more balck pixels, since the filter size is much more bigger that the last one.</p>
+
+<li>Sobel image</li>
+<p> 	Sobel filter is a oriented filter, and here the test script uses a vertical sobel filter, the vertical edges of the cat image are detected and shown (see figure 5), such as its vertical hair and vertical boundries.</p>
+
+<li>Laplacian image</li>
+<p> 	Different from gaussian filter, laplacian filter is a high pass filter. From figure 6, the cat image's high frequencies are kept and lose some low frequencies. And also, its feature is well kept after filtering.</p>
+
+<li>High pass image</li>
+<p> 	Similar to laplacian filter, here the test sript uses a simple high pass filter to remove some low frequencies by subtract the low frequency content directly (see figure 7). After that, the image does lose its low frequencies and some high frequencies are kept, but it also loses some important feature and make it a little hard to be recognized.</p>
+<table border=0>
+<tr>
+<td>
+<img src="cat1.bmp" width="24%"/>
+<img src="cat2_identity_image.jpg"  width="24%"/>
+<img src="cat3_blur_image.jpg" width="24%"/>
+<img src="cat4_large_blur_image.jpg" width="24%"/>
+<br />
+
+<p style="text-align:center">Figure 1
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+Figure 2
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+Figure 3
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+Figure 4</p>
+<br />
+
+</td>
+</tr>
+
+<tr>
+<td>
+<img src="cat5_sobel_image.jpg" width="24%"/>
+<img src="cat6_laplacian_image.jpg"  width="24%"/>
+<img src="cat7_high_pass_image.jpg" width="24%"/>
+<br />
+
+<p style="text-align:center">Figure 5
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+Figure 6
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+Figure 7
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+</p>
+
+<br />
+</td>
+</tr>
+
+</table>
+
+<li>Gray scale image</li>
+<p> 	Since my_imfilter() function can filter each color channel of the imput image separately, the grayscale image can also be well filtered (see figure 8 to 14). </p>
+<table border=0>
+<tr>
+<td>
+<img src="lena1.jpg" width="24%"/>
+<img src="lena2_identity_image.jpg"  width="24%"/>
+<img src="lena3_blur_image.jpg" width="24%"/>
+<img src="lena4_large_blur_image.jpg" width="24%"/>
+</td>
+</tr>
+
+<tr>
+<td>
+<img src="lena5_sobel_image.jpg" width="24%"/>
+<img src="lena6_laplacian_image.jpg"  width="24%"/>
+<img src="lena7_high_pass_image.jpg" width="24%"/>
+<p style="text-align:center">Figure 8 ~ 14 <p>
+</td>
+</tr>
+
+</table>
+
+</ol>
+
+<h3>Hybrid Images</h3>
+<ol>
+<li>Low frequencies</li>
+<p> 	From figure 15, we can see that the dog image's high frequencies is removed after blurring it. And also, its boundaries become black because of padding with zeros.</p>
+
+<li>High frequencies</li>
+<p> 	I subtract a blurred version of the cat image from the original one and then remove its low frequencies, the image's high frequencies are kept (see figure 16).</p>
+
+<li>Hybrid images</li>
+<p> 	Simply add the low frequencies of the dog image and high frequencies of the cat image together, and then scale it to different sizes, we can see the hybrid images (figure 17). The bigger the hybrid image is (or closer to it), the more "cat" it shows, and the smaller the hybrid image is (or further to it), the more "dog" it shows.</p>
+
+<table border=0>
+<tr>
+<td>
+<img src="dog&cat1_low_frequencies.jpg" width="24%"/>
+<img src="dog&cat2_high_frequencies.jpg"  width="24%"/>
+<img src="dog&cat3_hybrid_image_scales.jpg" width="48%"/>
+<p style="text-align:center">Figure 15 ~ 17: cutoff_frequency1=7, cutoff_frequency2=7 <p>
+</td>
+</tr>
+</table>
+
+<p> 	When dealing with Marilyn and Einstein images, same cutoff frequency does not work well. From figure 18 to 20, I use the the same cutoff frequency 4 to filter them, there are too many high frequencies kept in the Einstein image, and result in that the hybrid image is similar to the Einstein image even we stand far from it and see it.</p>
+<table border=0>
+<tr>
+<td>
+<img src="m&e1_1_low_frequencies.jpg" width="24%"/>
+<img src="m&e1_2_high_frequencies.jpg"  width="24%"/>
+<img src="m&e1_3_hybrid_image_scales.jpg" width="48%"/>
+<p style="text-align:center">Figure 18 ~ 20: cutoff_frequency1=4, cutoff_frequency2=4 <p>
+</td>
+</tr>
+</table>
+
+<p> 	And then I use the the same cutoff frequency 2 to filter them, the result is still not ideal. Too much feature of the Marilyn image is kept and the hybrid image is more similar to Marilyn (see figure 21 to 23).</p>
+<table border=0>
+<tr>
+<td>
+<img src="m&e2_1_low_frequencies.jpg" width="24%"/>
+<img src="m&e2_2_high_frequencies.jpg"  width="24%"/>
+<img src="m&e2_3_hybrid_image_scales.jpg" width="48%"/>
+<p style="text-align:center">Figure 21 ~ 23: cutoff_frequency1=2, cutoff_frequency2=2 <p>
+</td>
+</tr>
+</table>
+
+<p> 	So I decided to use two cutoff frequencies, that can help me to control how much high frequency to remove from the first image and how much low frequency to leave in the second image seperately, and then gain a better result of hybrid image (see figure 24 to 26).</p>
+<table border=0>
+<tr>
+<td>
+<img src="m&e3_1_low_frequencies.jpg" width="24%"/>
+<img src="m&e3_2_high_frequencies.jpg"  width="24%"/>
+<img src="m&e3_3_hybrid_image_scales.jpg" width="48%"/>
+<p style="text-align:center">Figure 24 ~ 26: cutoff_frequency1=4, cutoff_frequency2=2 <p>
+</td>
+</tr>
+</table>
+
+<p> 	When dealing with the fish and submarine images, I used the submarine image as image1 and the  fish image as image2 firstly, the hybrid image is good. But then I used the fish image as image1 and the submarine image as image2, the result is not ideal no matter how the  two cutoff frequencies changed. After analysis, the more complex the background of image is, the more suitble it is chose to be image2.</p>
+<table border=0>
+<tr>
+<td>
+<img src="s&f1_low_frequencies.jpg" width="24%"/>
+<img src="s&f2_high_frequencies.jpg"  width="24%"/>
+<img src="s&f3_hybrid_image_scales.jpg" width="48%"/>
+<p style="text-align:center">Figure 27 ~ 29: cutoff_frequency1=2, cutoff_frequency2=5 <p>
+</td>
+</tr>
+</table>
+
+<p> 	</p>
+<table border=0>
+<tr>
+<td>
+<img src="f&s1_low_frequencies.jpg" width="24%"/>
+<img src="f&s2_high_frequencies.jpg"  width="24%"/>
+<img src="f&s3_hybrid_image_scales.jpg" width="48%"/>
+<p style="text-align:center">Figure 30 ~ 32: cutoff_frequency1=4, cutoff_frequency2=11 <p>
+</td>
+</tr>
+</table>
+
+<p> 	Shadow.</p>
+<table border=0>
+<tr>
+<td>
+<img src="m&b1_low_frequencies.jpg" width="24%"/>
+<img src="m&b2_high_frequencies.jpg"  width="24%"/>
+<img src="m&b3_hybrid_image_scales.jpg" width="48%"/>
+<p style="text-align:center">Figure 33 ~ 35: cutoff_frequency1=6, cutoff_frequency2=2 <p>
+</td>
+</tr>
+</table>
+
+<p> 	Shadow.</p>
+<table border=0>
+<tr>
+<td>
+<img src="p&b1_low_frequencies.jpg" width="24%"/>
+<img src="p&b2_high_frequencies.jpg"  width="24%"/>
+<img src="p&b3_hybrid_image_scales.jpg" width="48%"/>
+<p style="text-align:center">Figure 36 ~ 38: cutoff_frequency1=5, cutoff_frequency2=9 <p>
+</td>
+</tr>
+</table>
+
+<p> 	Text.</p>
+<table border=0>
+<tr>
+<td>
+<img src="s&l1_low_frequencies.jpg" width="24%"/>
+<img src="s&l2_high_frequencies.jpg"  width="24%"/>
+<img src="s&l3_hybrid_image_scales.jpg" width="48%"/>
+<p style="text-align:center">Figure 39 ~ 41: cutoff_frequency1=1, cutoff_frequency2=2 <p>
+</td>
+</tr>
+</table>
+
+<p> 	Three images.</p>
+<table border=0>
+<tr>
+<td>
+<img src="s&f&b1_low_frequencies.jpg" width="24%"/>
+<img src="s&f&b2_high_frequencies.jpg"  width="24%"/>
+<img src="s&f&b3_sea.bmp"  width="24%"/>
+<img src="s&f&b4_hybrid_image.jpg" width="24%"/>
+<p style="text-align:center">Figure 42 ~ 45: cutoff_frequency1=2, cutoff_frequency2=7, cutoff_frequency3 = 1 <p>
+</td>
+</tr>
+</table>
+</ol>
+
+</body>
+</html>

@@ -1,0 +1,15 @@
+/a/abbey
+/a/airport_terminal
+/a/alley
+/a/amphitheater
+/a/amusement_arcade
+/a/amusement_park
+/a/apartment_building/outdoor
+/a/aqueduct
+/a/arch
+/a/art_gallery
+/a/art_studio
+/a/attic
+/a/auditorium
+/a/auto_factory
+/b/badlands

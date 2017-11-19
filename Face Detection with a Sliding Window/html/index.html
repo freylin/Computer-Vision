@@ -1,0 +1,365 @@
+<html>
+<head>
+<title>Face Detection Project</title>
+<link href='http://fonts.googleapis.com/css?family=Nunito:300|Crimson+Text|Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" title="Default" href="styles/github.css">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>  
+
+<link rel="stylesheet" href="highlighting/styles/default.css">
+<script src="highlighting/highlight.pack.js"></script>
+
+<style type="text/css">
+body {
+	margin: 0px;
+	width: 100%;
+	font-family: 'Crimson Text', serif;
+	font-size: 20px;
+	background: #fcfcfc;
+}
+h1 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 28px;
+	margin: 25px 0px 0px 0px;
+	text-transform: lowercase;
+
+}
+
+h2 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 32px;
+	margin: 15px 0px 35px 0px;
+	color: #333;	
+	word-spacing: 3px;
+}
+
+h3 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 26px;
+	margin: 10px 0px 10px 0px;
+	color: #333;
+	word-spacing: 2px;
+}
+h4 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 22px;
+	margin: 10px 0px 10px 0px;
+	color: #333;
+	word-spacing: 2px;
+}
+
+h5 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 18px;
+	margin: 10px 0px 10px 0px;
+	color: #111;
+	word-spacing: 2px;
+}
+
+p, li {
+	color: #444;
+}
+
+a {
+	color: #DE3737;
+}
+
+.container {
+	margin: 0px auto 0px auto;
+	width: 1160px;
+}
+
+#header {
+	background: #333;
+	width: 100%;
+}
+
+#headersub {
+	color: #ccc;
+	width: 960px;
+	margin: 0px auto 0px auto;
+	padding: 20px 0px 20px 0px;
+}
+
+.chart {
+	width: 480px;
+}
+.lol {
+	font-size: 16px;
+	color: #888;
+	font-style: italic;
+}
+.sep {
+	height: 1px;
+	width: 100%;
+	background: #999;
+	margin: 20px 0px 20px 0px;
+}
+.footer{
+	font-size: 16px;
+}
+.latex {
+	width: 100%;
+}
+
+.latex img {
+	display: block;
+	margin: 0px auto 0px auto;
+}
+
+pre {
+	font-family: 'Droid Sans Mono';
+	font-size: 14px;
+}
+
+table td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+table td img {
+  text-align: center;
+  vertical-align: middle;
+}
+
+#contents a {
+}
+</style>
+<script type="text/javascript">
+    hljs.initHighlightingOnLoad();
+</script>
+</head>
+<body>
+<div id="header" >
+<div id="headersub">
+<h1>Jin Lin</h1>
+</div>
+</div>
+<div class="container">
+
+<h2> Project 5 / Face Detection with a Sliding Window</h2>
+
+<h2>Goal</h2>
+<p> 	 Implement a sliding window detector to detect faces in images. There are four major parts:</p>
+
+<ol>
+<li>Get positive features</li>
+<li>Get random negative features</li>
+<li>Train a linear classifier</li>
+<li>Run the classifier on the test set</li>
+</ol>
+
+<h2>Get positive features</h2>
+<ol>
+<p> 	For each 36x36 image on the training dataset, we obtain its positive training face by converting it to a SIFT-like Histogram of Gradients feature with vl_hog() function. </p>
+</ol>
+
+<h2>Get random negative features</h2>
+<ol>
+<p> 	Similar to getting positive features, we get random negative features using vl_hog() function. But we randomly sample examples from scenes which contain no faces and then convert them to HoG features.</p>
+</ol>
+
+<p>We can modify cell size (the number of pixels in each HoG cell) to improve the performance. Smaller HoG cell size means larger feature dimension and which can work better but slower. And template size should be evenly divisible by cell size.</p>
+
+<table border=1>
+<tr> <th>Cell size = 6</th>  <th>Cell size = 3</th> </tr>
+<tr>
+<td> <img src="data/c6/cell.jpg" width="100%"/> </td>
+<td> <img src="data/c3/cell.jpg" width="100%"/> </td>
+</tr>
+</table>
+
+<h2>Train a linear classifier</h2>
+<ol>
+<p> 	After getting positive and negative examples, we train them using vl_trainsvm() function. And get w and b from this linear SVM classifier.</p>
+<pre><code>
+X = [features_pos; features_neg];
+Y = [ones(size(features_pos, 1), 1); -ones(size(features_neg, 1), 1)];
+lambda = 0.0001;
+[w, b] = vl_svmtrain(X', Y', lambda);
+
+</code></pre>
+</ol>
+
+<h2>Run the classifier on the test set</h2>
+<ol>
+<p> 	For each image on the test set, creating sliding window and run the classifier at multiple scales. We first convert each image to a HoG feature and then step over the HoG cells within a certain window (bounding box), and classify them (confidence is above the threshold or not). Downscaling each image and repeat converting and classifying several times to guarantee any size of face can be detected. Finally, applying non-maximum suppression to remove repeated boxes.</p>
+
+<table border=1>
+<tr> <th>Cell size</th>  <th>6</th> <th>3</th></tr>
+<tr> <th>Iterations</th>  <th>30</th> <th>30</th></tr>
+<tr> <th>Scale factor</th>  <th>0.9</th> <th>0.9</th></tr>
+<tr> <th>Threshold</th>  <th>0.1</th> <th>0.1</th></tr>
+<tr>
+<th>Average precision</th>
+<td> <img src="data/c6/ap.jpg" width="100%"/> </td>
+<td> <img src="data/c3/ap.jpg" width="100%"/> </td>
+</tr>
+<tr>
+<th>Recall</th>
+<td> <img src="data/c6/vj.jpg" width="100%"/> </td>
+<td> <img src="data/c3/vj.jpg" width="100%"/> </td>
+</tr>
+<tr>
+<th>Result image 1</th>
+<td> <img src="data/c6/p1.jpg" width="100%"/> </td>
+<td> <img src="data/c3/p1.jpg" width="100%"/> </td>
+</tr>
+<tr>
+<th>Result image 2</th>
+<td> <img src="data/c6/p2.jpg" width="100%"/> </td>
+<td> <img src="data/c3/p2.jpg" width="100%"/> </td>
+</tr>
+<tr>
+<th>Result image 3</th>
+<td> <img src="data/c6/p3.jpg" width="100%"/> </td>
+<td> <img src="data/c3/p3.jpg" width="100%"/> </td>
+</tr>
+</table>
+
+<p> 	We can see from the table above that smaller HoG cell size did work better. Even though some faces still can not be well detected, the average precision is improved from 88.6% to 91.9%. </p>
+</ol>
+
+
+
+
+<h2>Extra credit: hard negative features</h2>
+<ol>
+<p> 	I also pick up 10000 HoG features from "no faces scenes" when their confidences are above the threshold (which are classified as "faces", but actually they are not) and add them to negative features. Then retrain them to get a new linear SVM classifier. And use the new classifier to detect faces.</p>
+<table border=1>
+<tr> <th>Cell size</th>  <th>6</th> <th>6</th></tr>
+<tr> <th>Iterations</th>  <th>30</th> <th>30</th></tr>
+<tr> <th>Scale factor</th>  <th>0.9</th> <th>0.9</th></tr>
+<tr> <th>Threshold</th>  <th>0.1</th> <th>0.1</th></tr>
+<tr>
+<th>Average precision</th>
+<td> <img src="data/c6/ap.jpg" width="100%"/> </td>
+<td> <img src="data/h/ap.jpg" width="100%"/> </td>
+</tr>
+<tr>
+<th>Recall</th>
+<td> <img src="data/c6/vj.jpg" width="100%"/> </td>
+<td> <img src="data/h/vj.jpg" width="100%"/> </td>
+</tr>
+<tr>
+<th>Result image</th>
+<td> <img src="data/c6/p1.jpg" width="100%"/> </td>
+<td> <img src="data/h/p1.jpg" width="100%"/> </td>
+</tr>
+</table>
+
+<p> 	We can see that the average precision is not improved after adding hard negative features, which may because that hard negative features in the training images may not very similar to the hard negative features in the testing images. But it did reduce the "red" boxes a lot, which means that can improve the ratio of correct detection with same threshold.</p>
+</ol>
+
+<h2>Extra credit: interesting positive features</h2>
+<ol>
+<p> 	I also add some interesting features to positive set. I first flip each image and obtain their HoG features, and since some faces in testing images are not fully shown (covered by something or people turn their head a little bit), I cover each image's left/right/top/bottom side with black pixels separately and then add their HoG features into positive set.</p>
+
+<pre><code>
+for i = 1 : num_images
+    f = image_files(i);
+    IM = single(imread(fullfile(f.folder, f.name)));
+    HOG = vl_hog(IM, feature_params.hog_cell_size);
+    features_pos(i, :) = reshape(HOG, 1, D); 
+    
+    % mirroring
+    IM2 = fliplr(IM);
+    HOG = vl_hog(IM2, feature_params.hog_cell_size);
+    features_pos(i+num_images, :) = reshape(HOG, 1, D); 
+    
+    % 3/4 face (right side)
+    quarter_width = round(size(IM2, 2) / 4);
+    IM2 = IM;
+    IM2(:, 1:quarter_width) = 0;
+    HOG = vl_hog(IM2, feature_params.hog_cell_size);
+    features_pos(i+num_images*2, :) = reshape(HOG, 1, D); 
+        
+    % 3/4 face (left side)
+    IM2 = IM;
+    IM2(:, (quarter_width*3+1):end) = 0;
+    HOG = vl_hog(IM2, feature_params.hog_cell_size);
+    features_pos(i+num_images*3, :) = reshape(HOG, 1, D); 
+    
+    % 3/4 face (bottom side)
+    quarter_height = round(size(IM2, 1) / 4);
+    IM2 = IM;
+    IM2(1:quarter_height, :) = 0;
+    HOG = vl_hog(IM2, feature_params.hog_cell_size);
+    features_pos(i+num_images*4, :) = reshape(HOG, 1, D); 
+        
+    % 3/4 face (top side)
+    IM2 = IM;
+    IM2((quarter_height*3+1):end, :) = 0;
+    HOG = vl_hog(IM2, feature_params.hog_cell_size);
+    features_pos(i+num_images*5, :) = reshape(HOG, 1, D); 
+end
+
+</code></pre>
+
+<table border=1>
+<tr> <th>Face template</th>  <th>Average precision</th> <th>Result image</th> </tr>
+<tr>
+<td> <img src="data/ip/cell.jpg" width="100%"/> </td>
+<td> <img src="data/ip/ap.jpg" width="100%"/> </td>
+<td> <img src="data/ip/p4.jpg" width="100%"/> </td>
+</tr>
+</table>
+
+<p> 	Even though that did not improve the average precision, some "half faces" can be well detected by adding these interesting positive features.</p>
+</ol>
+
+<h2>Extra credit: additional object category</h2>
+<ol>
+<p> 	Here I detect a new object category: car (rear). And even the training images is not as many as face dataset, the results seem good (cell size = 6):</p>
+<table border=1>
+<tr> <th>Car (rear) template</th>  <th>Result image 1</th> <th>Result image 2</th> </tr>
+<tr>
+<td> <img src="data/car/cell.jpg" width="100%"/> </td>
+<td> <img src="data/car/p1.jpg" width="100%"/> </td>
+<td> <img src="data/car/p2.jpg" width="100%"/> </td>
+</tr>
+</table>
+
+<p> 	And in order to compare with the given datasets, I also download some new datasets and cut out faces as training data.</p>
+<p>(Cell size = 6, Iterations = 20, Scale factor = 0.9, Threshold = 1.0)</p>
+<table border=1>
+
+<tr>
+<th></th><th>Given datasets</th> <th>New datasets</th>
+</tr>
+<tr>
+<th>Face template</th>
+<td> <img src="data/c6/cell.jpg" width="100%"/> </td>
+<td> <img src="data/f/cell.jpg" width="100%"/> </td>
+</tr>
+<tr>
+<th>Result image 1</th>
+<td> <img src="data/c6/p5.jpg" width="100%"/> </td>
+<td> <img src="data/f/p5.jpg" width="100%"/> </td>
+</tr>
+<tr>
+<th>Result image 2</th>
+<td> <img src="data/c6/p6.jpg" width="100%"/> </td>
+<td> <img src="data/f/p6.jpg" width="100%"/> </td>
+</tr>
+<tr>
+<th>Result image 3</th>
+<td> <img src="data/c6/p7.jpg" width="100%"/> </td>
+<td> <img src="data/f/p7.jpg" width="100%"/> </td>
+</tr>
+<tr>
+<th>Result image 4</th>
+<td> <img src="data/c6/p8.jpg" width="100%"/> </td>
+<td> <img src="data/f/p8.jpg" width="100%"/> </td>
+</tr>
+</table>
+<p> 	Since the number of faces on new datasets is far more less than the given dataset, so the result is not as well as the given dataset.</p>
+</ol>
+
+
+</body>
+</html>

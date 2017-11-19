@@ -1,0 +1,299 @@
+<html>
+<head>
+<title>Computer Vision Project</title>
+<link href='http://fonts.googleapis.com/css?family=Nunito:300|Crimson+Text|Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" title="Default" href="styles/github.css">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>  
+
+<link rel="stylesheet" href="highlighting/styles/default.css">
+<script src="highlighting/highlight.pack.js"></script>
+
+<style type="text/css">
+body {
+	margin: 0px;
+	width: 100%;
+	font-family: 'Crimson Text', serif;
+	font-size: 20px;
+	background: #fcfcfc;
+}
+h1 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 28px;
+	margin: 25px 0px 0px 0px;
+	text-transform: lowercase;
+
+}
+
+h2 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 32px;
+	margin: 15px 0px 35px 0px;
+	color: #333;	
+	word-spacing: 3px;
+}
+
+h3 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 26px;
+	margin: 10px 0px 10px 0px;
+	color: #333;
+	word-spacing: 2px;
+}
+h4 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 22px;
+	margin: 10px 0px 10px 0px;
+	color: #333;
+	word-spacing: 2px;
+}
+
+h5 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 18px;
+	margin: 10px 0px 10px 0px;
+	color: #111;
+	word-spacing: 2px;
+}
+
+p, li {
+	color: #444;
+}
+
+a {
+	color: #DE3737;
+}
+
+.container {
+	margin: 0px auto 0px auto;
+	width: 960px;
+}
+
+#header {
+	background: #333;
+	width: 100%;
+}
+
+#headersub {
+	color: #ccc;
+	width: 960px;
+	margin: 0px auto 0px auto;
+	padding: 20px 0px 20px 0px;
+}
+
+.chart {
+	width: 480px;
+}
+.lol {
+	font-size: 16px;
+	color: #888;
+	font-style: italic;
+}
+.sep {
+	height: 1px;
+	width: 100%;
+	background: #999;
+	margin: 20px 0px 20px 0px;
+}
+.footer{
+	font-size: 16px;
+}
+.latex {
+	width: 100%;
+}
+
+.latex img {
+	display: block;
+	margin: 0px auto 0px auto;
+}
+
+pre {
+	font-family: 'Droid Sans Mono';
+	font-size: 14px;
+}
+
+td img {
+  vertical-align: middle;
+}
+
+#contents a {
+}
+</style>
+<script type="text/javascript">
+    hljs.initHighlightingOnLoad();
+</script>
+</head>
+<body>
+<div id="header" >
+<div id="headersub">
+<h1>JIN LIN</span></h1>
+</div>
+</div>
+<div class="container">
+
+<h2> Project 3 / Camera Calibration and Fundamental Matrix Estimation with RANSAC</h2>
+
+<h2>Goal</h2>
+<p> 	Estimate the camera projection matrix, which maps 3D world coordinates to image coordinates, as well as the fundamental matrix, which relates points in one scene to epipolar lines in another. There are three major parts:</p>
+<ol>
+
+<li>Part I: Camera Projection Matrix</li>
+<li>Part II: Fundamental Matrix Estimation</li>
+<li>Part III: Fundamental Matrix with RANSAC</li>
+</ol>
+
+
+<h3>Camera Projection Matrix</h3>
+<ol>
+<p> 	The projection matrix is a 3*4 matrix that goes from world 3D coordinates to 2D image coordinates. The equation is:</p>
+<td> <img src="data/Other/promat.gif" width="50%"/> </td>
+
+<p> 	I fixed the last element m_34 to 1 and then did the regression to find the remaining coefficients.</p>
+<p> 	The projection matrix M obtained is:</p>
+<td> <img src="data/Other/pmat.png" width="50%"/> </td>
+<p> 	And the matrix is a scaled version of the one on the project page:</p>
+<td> <img src="data/Other/pmat2.png" width="50%"/> </td>
+<p> 	The residual is: 0.0445</p>
+<p> 	The camera center is: <-1.5126, -2.3517, 0.2827></p>
+<table border=1>
+<tr> <th>Actual 2D points and the projected 2D points calculated from the projection matrix</th>  <th>Actual 3D points and the estimated 3D camera center</th> </tr>
+<tr>
+<td> <img src="data/Other/part1_1.jpg" width="100%"/> </td>
+<td> <img src="data/Other/part1_2.jpg" width="100%"/> </td>
+</tr>
+</table>
+</ol>
+
+
+
+<h3>Fundamental Matrix Estimation</h3>
+<ol>
+<p> 	The definition of the fundamental matrix is:</p>
+<td> <img src="data/Other/fmat1.png" width="40%"/> </td>
+<p> 	And then we get:</p>
+<td> <img src="data/Other/fmat2.png" width="80%"/> </td>
+<p> 	I used the same method used in part 1 of first fixing the last element f_33 and then solving the regression. After obtaining matrix F, in order to reduce its rank I decomposed F using singular value decomposition into the matrices UΣV' = F, and then set the smallest singular value in Σ to zero thus generating Σ_2, obtained a new matrix F = UΣ_2V'.</p>
+<p> 	Also, before computing the fundamental matrix, I normalized the coordinates in order to improve the fundamental matrix. The estimated fundamental matrices before and after normalization are:</p>
+<table border=1>
+<tr>
+<tr> <th>Before normalization</th>  <th>After normalization</th> </tr>
+<td> <img src="data/Other/fmat4.png" width="80%"/> </td>
+<td> <img src="data/Other/fmat3.png" width="80%"/> </td>
+</tr>
+</table>
+<table border=1>
+<tr>
+<tr> <th>Before normalization</th>  <th>After normalization</th> </tr>
+<td> <img src="data/Other/part2_3.jpg" width="100%"/> <img src="data/Other/part2_4.jpg" width="100%"/></td>
+<td> <img src="data/Other/part2_1.jpg" width="100%"/> <img src="data/Other/part2_2.jpg" width="100%"/></td>
+</tr>
+</table>
+<p> 	We can see from the figures above that the epipolar lines are slightly off-centered before normalizing the coordinates. And in part III we are more likely to notice an improvement (Episcopal Gaudi image pair).</p>
+</ol>
+
+
+
+<h3>Fundamental Matrix with RANSAC</h3>
+<ol>
+<p> 	For this part, I use RANSAC to find the best fundamental matrix with unreliable point correspondences computed with SIFT. I iteratively chose 8 point correspondences to solve for the fundamental matrix F using the function I wrote for part II, and then count the number of inliers. The number of iteration N is computed as: N = round(log(1-probability) / log(1-(1-outlier_ratio)^sample_num)). And I defined a threshold to find all inliers for which the absolute value of (matches_b * F *  matches_a') is less than the preset threshold.</p>
+
+<p> 	(All "sample number" is 8, and "desired probability" is 99.9%).</p>
+<table border=1>
+<tr><th>outlier ratio = 40% &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp threshold = 0.08 &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp iterations = 408 &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp inliers obtained = 640</th></tr>
+<tr>
+<td> 
+<img src="data/Mount Rushmore/40_4.jpg" width="49.5%"/>
+<img src="data/Mount Rushmore/40_3.jpg" width="49.5%"/> 
+</td>
+</tr>
+<tr>
+<td> <img src="data/Mount Rushmore/40_2.jpg" width="100%"/> </td>
+</tr>
+</table>
+<p> 	This Mount Rushmore pair is easy, since most of the initial matches are correct, I set a low outlier ratio = 40%. With low iteration number, the epipolar lines and the inlier keypoint correspondences look good.</p>
+
+<br/>
+
+<table border=1>
+<tr><th>outlier ratio = 70% &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp threshold = 0.05 &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp iterations = 105282 &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp inliers obtained = 549</th></tr>
+<tr>
+<td> 
+<img src="data/Notre Dame/70_4.jpg" width="49.5%"/>
+<img src="data/Notre Dame/70_3.jpg" width="49.5%"/> 
+</td>
+</tr>
+<tr>
+<td> <img src="data/Notre Dame/70_2.jpg" width="100%"/> </td>
+</tr>
+</table>
+<p> 	Because the keypoints of the Notre Dame pair are largely on the same plane, the fundamental matrix can not be well constrained. I set a high outlier ratio and low threshold, then iterated 105282 times to find the best matrix. It is pretty hard to find the correct epipolar lines. But at least we can always remove most outliers.</p>
+
+<br/>
+<p>Before normalization:</p>
+<table border=1>
+<tr><th>Before normalization:  &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp noutlier ratio = 70% &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp threshold = 0.001 &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp iterations = 105282 &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp inliers obtained = 81</th></tr>
+<tr>
+<td> 
+<img src="data/Episcopal Gaudi/before_4.jpg" width="49.5%"/>
+<img src="data/Episcopal Gaudi/before_3.jpg" width="49.5%"/> 
+</td>
+</tr>
+<tr>
+<td> <img src="data/Episcopal Gaudi/before_2.jpg" width="100%"/> </td>
+</tr>
+</table>
+<br/>
+<p>After normalization:</p>
+<table border=1>
+<tr><th>After normalization:  &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp outlier ratio = 70% &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp threshold = 0.001 &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp iterations = 105282 &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp inliers obtained = 30</th></tr>
+<tr>
+<td> 
+<img src="data/Episcopal Gaudi/70_4.jpg" width="49.5%"/>
+<img src="data/Episcopal Gaudi/70_3.jpg" width="49.5%"/> 
+</td>
+</tr>
+<tr>
+<td> <img src="data/Episcopal Gaudi/70_2.jpg" width="100%"/> </td>
+</tr>
+</table>
+
+<p> 	The Episcopal Gaudi image pair shown above is also difficult. I tuned the iterations and threshold many times, but still could not find a good fundamental matrix to produce a better result. Finally, I set a very low threshold 0.001, and then gained a reasonable matrix, but the number of inliers is only 30 (before normalization, inliers num = 81). In the other hand, it is obviously from the figures above that before normalizing the coordinates, the result has many outliers and produces a ill matrix. Normalizing helps us to find a reasonable fundamental matrix and makes the results much better.</p>
+
+<br/>
+
+<table border=1>
+<tr><th>outlier ratio = 60% &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp threshold = 0.08 &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp iterations = 10537 &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp inliers obtained = 249</th></tr>
+<tr>
+<td> 
+<img src="data/Woodruff Dorm/80_4.jpg" width="49.5%"/>
+<img src="data/Woodruff Dorm/80_3.jpg" width="49.5%"/> 
+</td>
+</tr>
+<tr>
+<td> <img src="data/Woodruff Dorm/80_2.jpg" width="100%"/> </td>
+</tr>
+</table>
+
+<br/>
+
+<table border=1>
+<tr><th>outlier ratio = 80% &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp threshold = 0.08 &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp iterations = 2698338 &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp | &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp inliers obtained = 294</th></tr>
+<tr>
+<td> 
+<img src="data/Woodruff Dorm/80_4.jpg" width="49.5%"/>
+<img src="data/Woodruff Dorm/80_3.jpg" width="49.5%"/> 
+</td>
+</tr>
+<tr>
+<td> <img src="data/Woodruff Dorm/80_2.jpg" width="100%"/> </td>
+</tr>
+</table>
+<p> 	The Woodruff Dorm image pair has a clearer relationship between the cameras (they are converging and have a wide baseline between them). The epipolars are outside the image pair. But the outlier ratio is pretty high, so I did a huge amount of iteration to get a reasonable fundamental matrix, and to reduce the outliers. From the figures above, we can see that, under this image pair, more iterations can find a better martix and then keep more inliers and remove more outliers.</p>
+</ol>
+
+</body>
+</html>
