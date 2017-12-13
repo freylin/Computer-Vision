@@ -1,0 +1,271 @@
+<html>
+<head>
+<title>Deep Learning Project</title>
+<link href='http://fonts.googleapis.com/css?family=Nunito:300|Crimson+Text|Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" title="Default" href="styles/github.css">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>  
+
+<link rel="stylesheet" href="highlighting/styles/default.css">
+<script src="highlighting/highlight.pack.js"></script>
+
+<style type="text/css">
+body {
+	margin: 0px;
+	width: 100%;
+	font-family: 'Crimson Text', serif;
+	font-size: 20px;
+	background: #fcfcfc;
+}
+h1 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 28px;
+	margin: 25px 0px 0px 0px;
+	text-transform: lowercase;
+
+}
+
+h2 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 32px;
+	margin: 15px 0px 35px 0px;
+	color: #333;	
+	word-spacing: 3px;
+}
+
+h3 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 26px;
+	margin: 10px 0px 10px 0px;
+	color: #333;
+	word-spacing: 2px;
+}
+h4 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 22px;
+	margin: 10px 0px 10px 0px;
+	color: #333;
+	word-spacing: 2px;
+}
+
+h5 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 18px;
+	margin: 10px 0px 10px 0px;
+	color: #111;
+	word-spacing: 2px;
+}
+
+p, li {
+	color: #444;
+}
+
+a {
+	color: #DE3737;
+}
+
+.container {
+	margin: 0px auto 0px auto;
+	width: 1160px;
+}
+
+#header {
+	background: #333;
+	width: 100%;
+}
+
+#headersub {
+	color: #ccc;
+	width: 960px;
+	margin: 0px auto 0px auto;
+	padding: 20px 0px 20px 0px;
+}
+
+.chart {
+	width: 480px;
+}
+.lol {
+	font-size: 16px;
+	color: #888;
+	font-style: italic;
+}
+.sep {
+	height: 1px;
+	width: 100%;
+	background: #999;
+	margin: 20px 0px 20px 0px;
+}
+.footer{
+	font-size: 16px;
+}
+.latex {
+	width: 100%;
+}
+
+.latex img {
+	display: block;
+	margin: 0px auto 0px auto;
+}
+
+pre {
+	font-family: 'Droid Sans Mono';
+	font-size: 14px;
+}
+
+table td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+table td img {
+  text-align: center;
+  vertical-align: middle;
+}
+
+#contents a {
+}
+</style>
+<script type="text/javascript">
+    hljs.initHighlightingOnLoad();
+</script>
+</head>
+<body>
+<div id="header" >
+<div id="headersub">
+<h1>Jin Lin </h1>
+</div>
+</div>
+<div class="container">
+
+<h2> Project 6 / Deep Learning</h2>
+<h2>Goal</h2>
+<p> 	 Design and train deep convolutional networks for scene recognition using the MatConvNet toolbox. </p>
+<ol>
+<li>Train a deep convolutional network from scratch to recognize scenes.</li>
+<li>Use the pretrained VGG-F network to achieve more than 85% accuracy on the task.</li>
+</ol>
+
+<h2>Part 1: training a deep network from scratch.</h2>
+<h3>Baseline</h3>
+<ol>
+<p> 	 The starter code has a simple baseline network with 4 layers, without any tuning, we can recognize scenes with about 25% accuracy on the 15 scene database:</p>
+<table border=1>
+<tr>
+<td> <img src="images/F1/init.jpg" width="100%"/> </td>
+<td> <img src="images/F2/init.jpg" width="100%"/> </td>
+</tr>
+</table>
+<p> 	 The testing error is much higher than training error, it is overfitting to the training data.</p>
+</ol>
+
+<h3>Jitter some data</h3>
+<ol>
+<p> 	 I randomly left-right flip half of the images to increase the amount of training data.</p>
+</ol>
+<h3>Zero-center the images</h3>
+<ol>
+<p> 	 I first subtracted each image by its own mean, that did increase the accuracy, since it is also a form of normalization. And then instead that I subtracted each image by the average of all training images, that performed better than former method with 2% more accuracy.</p>
+</ol>
+<h3>Use dropout regularization</h3>
+<ol>
+<p> 	 I insert a dropout layer before the last convolutional layer, to regularize the network. That randomly cuts out network connections at training time, makes test accuracy increase a lot (more than 10%).</p>
+</ol>
+<h3>Make the network deeper</h3>
+<ol>
+<p> 	 I add an additional convolutional layer and another max-pool layer and relu layer to make the network deeper.</p>
+</ol>
+<h3>Batch normalization</h3>
+<ol>
+<p> 	 And I also add a batch normalization layer after each convolutional layer except for the last
+one, and then use a higher learning rate(0.001) to achieve higher accuracy.</p>
+</ol>
+
+
+<p> 	 After all these adjustments above, the "lowest validation error" I gain is 0.438, which means the accuracy is 56.2% (learningRate = 0.001, numEpochs = 100):</p>
+<table border=1>
+<tr>
+<td> <img src="images/F1/Bnorm_train.jpg" width="100%"/> </td>
+<td> <img src="images/F2/Bnorm_train.jpg" width="100%"/> </td>
+</tr>
+</table>
+
+<p> 	 I also tried other improvements such as inconstant learningRate, working with the higher resolution images, alternating loss layers and simply increasing numEpochs. And the highest accuracy achieved is 59.87% (resolution = 128*128, loss layer = "hinge loss", learningRate = 0.001, numEpochs = 100):</p>
+<table border=1>
+<tr>
+<td> <img src="images/improvements/F1.jpg" width="100%"/> </td>
+<td> <img src="images/improvements/F2.jpg" width="100%"/> </td>
+</tr>
+</table>
+
+
+<br>
+<h2>Part 2: fine-tuning a pre-trained deep network</h2>
+<ol>
+<p> 	 For part 2, instead training a new network I use the pre-trained VGG-F network and fine-tune it to perform scene recognition. I first replace the final two layers, fc8 and the softmax layer with a new fc8 and softmax layer, and set the new fc8 layer's output depth to 15. Then add a dropout layer between fc6 and fc7 and between fc7 and fc8. Since VGG-F accepts 3 channel (RGB) images, I also concatenate the grayscale images in 15 scene dataset with themselves to make RGB images. And use net.meta.normalization.averageImage to normalize these images.</p>
+<p> 	 After that, I set learningRate to 0.0001 and numEpochs to 4, then the accuracy achieved is 86.27%:</p>
+<table border=1>
+<tr>
+<td> <img src="images/part2/F1/e4.jpg" width="100%"/> </td>
+<td> <img src="images/part2/F2/e4.jpg" width="100%"/> </td>
+</tr>
+</table>
+<p> 	 Then I raise numEpochs to 15, and the highest accuracy I get is 88.33%:</p>
+<table border=1>
+<tr>
+<td> <img src="images/part2/F1/e15.jpg" width="100%"/> </td>
+<td> <img src="images/part2/F2/e15.jpg" width="100%"/> </td>
+</tr>
+</table>
+</ol>
+
+<br>
+<h2>SUN database</h2>
+<ol>
+<p> 	 Here I use additional scene training data: the SUN397 database to train a network from scratch. Since each category in the SUN397 contains at least 100 images, I randomly select 50 images per category as training data and another 50 images as testing data. In order to compare with the performance of the 15 scene database, I first chose 15 categories from the SUN397 database, and use them to train a network using the similar method in part1, but it is heavily overfitting: validation error is very high with low train error:
+</p>
+<table border=1>
+<tr>
+<td> <img src="images/S397/15/F1.jpg" width="100%"/> </td>
+<td> <img src="images/S397/15/F2.jpg" width="100%"/> </td>
+</tr>
+</table>
+
+<p> 	 Then I use all 397 categories to train a new network, validation error and train error are both rather low. Train error drops constantly(slightly though) and validation error almost stays at the same level:
+</p>
+<table border=1>
+<tr>
+<td> <img src="images/S397/397/F1.jpg" width="100%"/> </td>
+<td> <img src="images/S397/397/F2.jpg" width="100%"/> </td>
+</tr>
+</table>
+<p> 	 The reason I think is the big noise in data, image number of each category is too small to fight overfitting, even I flip some of them increase the amount of training data.
+</p>
+
+<p> 	 Then I use the learned network to test the 15 scene database, the result is surprisingly good:
+</p>
+<p> 	 (/ /training data: 397 categories from SUN database/ /number of network layers: 11/ /learningRate: 0.001/ /accuracy:54.67% )</p>
+<table border=1>
+<tr>
+<td> <img src="images/S397/test15/F1.jpg" width="100%"/> </td>
+<td> <img src="images/S397/test15/F2.jpg" width="100%"/> </td>
+</tr>
+</table>
+
+<p> 	 (/ /training data: 397 categories from SUN database/ /number of network layers: 11/ /learningRate: 0.001/ /accuracy:52.73% )</p>
+<table border=1>
+<tr>
+<td> <img src="images/S397/test397/F1.jpg" width="100%"/> </td>
+<td> <img src="images/S397/test397/F2.jpg" width="100%"/> </td>
+</tr>
+</table>
+
+
+</ol>
+
+
+</body>
+</html>
